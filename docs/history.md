@@ -13,7 +13,7 @@ fish run is described by the criterion it did not meet (B1, matched controls), n
 
 | Study | Reading | Source |
 |---|---|---|
-| Fish bulk ISP, 30 TE regulators | B1 not met: the regulators were not distinguishable from 90 expression-matched random genes, plain or with the TE axis removed | `docs/runs/2026-10-01_fish_bulk_isp/RUN_RECORD.md`, `tables/05c_*` |
+| Fish bulk ISP, 30 TE regulators | B1 not met: the regulators were not distinguishable from 90 expression-matched random genes, plain or with the TE axis removed; the control design also fell short of B1 (3 matched controls per regulator, B1 asks for at least 20 per gene), so the per-gene status is `not_estimable` | `docs/runs/2026-10-01_fish_bulk_isp/RUN_RECORD.md`, `tables/05c_*` |
 | Zebrafish ground truth, 17 contrasts | 0 of 16 loss-of-function studies shifted global TE share at FDR < 0.05; weakly powered | `docs/runs/2026-10-01_zebrafish_validation/REPORT.md` |
 | Fish prediction against zebrafish response | Not supported: Spearman rho = -0.18 (p = 0.50, n = 17); the test crosses species, tissue and perturbation type | `tables/08_prediction_concordance.tsv`, `08f_exploratory_concordance.tsv` |
 
@@ -44,7 +44,7 @@ was 0.055 and BH-FDR 0.82, and the run record does not report it as a finding.
 
 The run record's reading is that natural variation in silencer mRNA across unperturbed animals carries no detectable
 information about TE regulation beyond what any gene of similar expression carries, and that bulk linear ISP cannot
-nominate TE regulators in this dataset. Under ISP-STD-1 this is a failure of the matched-control rule (B1). It does
+nominate TE regulators in this dataset. Under ISP-STD-1 this is a failure of the matched-control rule (B1), in two parts: the regulators did not separate from the matched random genes, and the design had 3 controls per regulator against the 20 per gene that B1 asks for. It does
 not show that these regulators fail to act on fish TEs: transcript level is a poor proxy for silencing activity, and
 the design cannot separate the two.
 
@@ -62,7 +62,7 @@ the design cannot separate the two.
 | Review | no named reviewer in the run record |
 
 A side result from the same cohort, outside ISP: developmental CO2 exposure lowered the TE read share in gill by
-11.4% [5.1, 17.2] (FDR 0.005); brain and liver were inconclusive
+11.4% [5.1, 17.2] (FDR 0.0056); brain and liver were inconclusive
 (`docs/runs/2026-10-01_te_axis_treatment/REPORT.md`). What the TE axis is biologically (nascent or intronic RNA
 fraction, or cell composition) was left open.
 

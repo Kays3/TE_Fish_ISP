@@ -18,5 +18,5 @@ PYTHON=.venv-bulk/bin/python scripts/run_all.sh        # rebuilds and checks the
 
 **Figures are byte-reproducible only with this lock.** Matplotlib changes tick, font and layout details between
 minor versions: the same tables drawn with matplotlib 3.10.8 give a different PNG (same data, shifted layout), while
-matplotlib 3.11.2 gives the committed bytes. PDFs carry a fixed creation date (`SOURCE_DATE_EPOCH`) so they repeat
+matplotlib 3.11.2 gives the committed bytes on Linux x86_64. On macOS with the same lock the PNGs are pixel-identical but the encoder bytes differ. PDFs carry a fixed creation date (`SOURCE_DATE_EPOCH`) so they repeat
 too. Installing the lock is a download; ask before doing it on a machine that does not already have the packages.
