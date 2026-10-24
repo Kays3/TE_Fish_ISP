@@ -1,0 +1,17 @@
+{
+  "utc": "2026-10-01T06:29:56.587108+00:00",
+  "python": "3.11.15",
+  "platform": "Linux-6.17.0-1029-nvidia-aarch64-with-glibc2.39",
+  "repo_commit": "d8a91aa8709cf109e228f10dbaee40669eee2297",
+  "config_path": "$REPO_ROOT/runs/fish_te_axis_treatment_20261001.yaml",
+  "config_sha256": "79d15d7bf31ed750d05d5c1f9c5090534d4046917328874941270ff7e5c2196a",
+  "pc1_within_var": 0.29322996176521804,
+  "n_samples": 162,
+  "qc_covariates": [
+    "log_star_input_reads",
+    "unique_mapping_pct",
+    "multimapping_pct",
+    "unmapped_fraction_pct"
+  ],
+  "de_table": "runs/oa_significant_te_results.tsv"
+}

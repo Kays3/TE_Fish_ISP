@@ -1,0 +1,16 @@
+{
+  "utc": "2026-10-01T06:21:59.663653+00:00",
+  "python": "3.11.15",
+  "platform": "Linux-6.17.0-1029-nvidia-aarch64-with-glibc2.39",
+  "repo_commit": "a487ca96933eace401f25cfd574fbb91d6bc8d18",
+  "config_path": "$REPO_ROOT/runs/fish_bulk_isp_20261001.yaml",
+  "config_sha256": "bcc67eb3d2a5d4169dec63ccd6dd4f54a7a8eacd213f0d6430cf6cf4f29f48de",
+  "regulators_vs_random_abs_r": {
+    "median_abs_r_regulators": 0.19227268473255024,
+    "median_abs_r_random": 0.15770312174859713,
+    "mannwhitney_U": 34352.0,
+    "p": 0.1720887248001589,
+    "n_regulators": 30,
+    "n_random": 2000
+  }
+}

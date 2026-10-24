@@ -1,0 +1,36 @@
+# Candidate gene sets for scripts/07_treatment_gene_axis.py, using
+# Acanthochromis polyacanthus NCBI symbols (GCF_021347895.1; GTF gene_id
+# "gene-<symbol>"). Every symbol was checked present in the
+# counts-singlebatch TEcount tables on 2026-10-01. Genes not expressed in a
+# tissue (mean < bulk_isp.min_count) are dropped per tissue at run time.
+
+te_regulators:
+  description: Configured TE silencers and activators found in the annotation (the 05 regulator set)
+  genes: [atf7ip, atrx, chaf1a, daxx, dnmt1, dnmt3ab, dnmt3bb.1, ehmt2, ezh2, kdm1a, mettl3,
+          morc2, mov10a, mphosph8, myca, pphln1, rb1, runx3, safb, setdb1a, setdb1b, smarcad1a,
+          tasora, tasorb, tp53, uhrf1, ythdc1, yy1a, yy1b, znf438]
+
+gaba:
+  description: >-
+    GABA signalling. GABA-A receptor subunits (gabr*), GABA-B receptors
+    (gabbr*), synthesis (gad2), degradation (abat), vesicular (slc32a1) and
+    plasma-membrane GABA transporters (slc6a1a/b, slc6a11b, slc6a13), and the
+    Cl- cotransporters NKCC1 (slc12a2) and KCC2 (slc12a5b) that set the
+    GABA-A reversal potential (the OA-behaviour GABA hypothesis).
+  genes: [gabra1, gabra2a, gabra3, gabra4, gabra5, gabra6a, gabra6b, gabrb1, gabrb2a, gabrb3,
+          gabrb4, gabrd, gabrg1, gabrg2, gabrp, gabrr2a, gabrr3a, gabbr1a, gabbr1b, gabbr2,
+          gad2, abat, slc32a1, slc6a1a, slc6a1b, slc6a11b, slc6a13, slc12a2, slc12a5b]
+
+thyroid:
+  description: >-
+    Thyroid hormone axis. TSH (tshba) and its receptor (tshr), TRH and
+    receptors, synthesis (tg, tpo, slc5a5/NIS, duox, duox2, pax8),
+    deiodinases (dio1, dio2, dio3a), receptor (thrb), transporters
+    (slc16a2/MCT8, slc16a10/MCT10) and the TH-responsive thrsp.
+  genes: [tshba, tshr, trh, trhra, trhr2, tg, tpo, slc5a5, duox, duox2, pax8, dio1, dio2, dio3a,
+          thrb, slc16a2, slc16a10, thrsp]
+
+glut:
+  description: Facilitative glucose transporters (slc2a family; slc2a4rg excluded as a regulator)
+  genes: [slc2a1a, slc2a1b, slc2a2, slc2a3a, slc2a3b, slc2a6, slc2a8, slc2a9l1, slc2a9l2,
+          slc2a10, slc2a11a, slc2a11b, slc2a12, slc2a15a, slc2a15b]

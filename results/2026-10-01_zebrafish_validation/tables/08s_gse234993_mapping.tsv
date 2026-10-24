@@ -1,0 +1,19 @@
+sample_id	role	block	unique_mapped_pct	alignment
+SRR24921922	control	clutch2	22.62	paired
+SRR24921918	perturbed	clutch2	23.13	paired
+SRR24921921	control	clutch3	30.07	paired
+SRR24921920	control	clutch4	31.71	paired
+SRR24921909	perturbed	clutch4	19.26	paired
+SRR24921910	perturbed	clutch5	19.36	paired
+SRR24921917	perturbed	clutch3	21.87	paired
+SRR24921919	perturbed	clutch1	20.99	paired
+SRR24921923	control	clutch1	25.4	paired
+SRR24921922	control	clutch2	22.1	read 1 only
+SRR24921918	perturbed	clutch2	22.59	read 1 only
+SRR24921921	control	clutch3	29.43	read 1 only
+SRR24921920	control	clutch4	31.15	read 1 only
+SRR24921909	perturbed	clutch4	19.04	read 1 only
+SRR24921910	perturbed	clutch5	19.05	read 1 only
+SRR24921917	perturbed	clutch3	21.62	read 1 only
+SRR24921919	perturbed	clutch1	20.57	read 1 only
+SRR24921923	control	clutch1	24.85	read 1 only

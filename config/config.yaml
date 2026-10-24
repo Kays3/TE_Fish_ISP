@@ -1,0 +1,423 @@
+# =============================================================================
+# TE-Geneformer-ISP — pipeline configuration
+# =============================================================================
+# Every script reads this file (default: config/config.yaml, override with
+# --config). Relative paths resolve against the repository root, not the
+# current working directory.
+#
+# Conventions carried over from the sibling repositories:
+#   * geneformer-lung-tcell  — Geneformer V2 (316M here, run in bf16 as in
+#     sclc_validation/bf16_bench), donor-disjoint splits,
+#     reference-state centroids from TRAINING cells only, nproc=1 for GPU
+#     perturbation, expression-matched null genes.
+#   * TE_Ocean_Acidification / TE_Mobilome_Paper — TEtranscripts-format TE GTF
+#     (gene_id / transcript_id / family_id / class_id), `strict_te` filtering
+#     of non-TE repeat classes, `Unknown` kept as its own class and never
+#     presented as a validated classification.
+# =============================================================================
+
+project:
+  name: te-geneformer-isp
+  seed: 20261001
+
+# -----------------------------------------------------------------------------
+# Directory layout (created on demand; data/ and results/ subtrees are
+# git-ignored except for small committed summary tables)
+# -----------------------------------------------------------------------------
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  tokenized_dir: data/tokenized
+  models_dir: models                     # fine-tuned / vocab-extended checkpoints
+  dictionaries_dir: data/dictionaries    # extended token dictionaries (vocab.mode: extended)
+  isp_dir: results/isp                   # raw Geneformer ISP pickles + stats CSVs
+  te_map_dir: results/te_map             # regulator -> TE-family readout tables
+  tables_dir: results/tables
+  figures_dir: results/figures
+  logs_dir: results/logs
+
+# -----------------------------------------------------------------------------
+# Input single-cell matrix with genes AND TE features in one cell x feature
+# matrix (raw integer counts).
+#   format: scte_h5ad   — scTE output written with --hdf5 True
+#           scte_csv    — scTE default CSV (cells x features)
+#           solote_10x  — SoloTE-augmented 10x matrix directory (TE rows prefixed)
+#           h5ad        — any AnnData; TE rows identified by te.feature_detection
+# -----------------------------------------------------------------------------
+input:
+  format: scte_h5ad
+  path: data/raw/joint_gene_te_counts.h5ad
+  counts_layer: null              # null -> adata.X holds raw counts
+  gene_id_type: symbol            # symbol | ensembl  (scTE emits symbols)
+  # Cell metadata. Either already in obs, or joined from this TSV on cell_id.
+  cell_metadata_tsv: null
+  obs_keys:
+    cell_id: cell_id
+    donor: donor_id               # unit of biological replication — never split across train/test
+    cell_type: cell_type
+    condition: condition          # e.g. tumor / normal; used for differential networks
+    batch: batch
+
+# -----------------------------------------------------------------------------
+# Species. Geneformer V2 is trained on human Ensembl gene IDs. Non-human data
+# (e.g. Acanthochromis polyacanthus from TE_Ocean_Acidification) must be
+# projected onto human orthologs first; this is an UNVALIDATED assumption for
+# non-mammalian species and every result from it must say so.
+# -----------------------------------------------------------------------------
+species:
+  name: homo_sapiens
+  orthology:
+    enabled: false
+    table: data/raw/orthologs_to_human.tsv   # e.g. Ensembl Compara / OrthoFinder export
+    source_id_col: source_gene_id
+    human_ensembl_col: human_ensembl_id
+    homology_type_col: homology_type
+    keep_types: [ortholog_one2one]           # many-to-many mappings are dropped, not summed
+
+# -----------------------------------------------------------------------------
+# Geneformer model and dictionaries — Geneformer-V2-316M (hidden size 1152).
+# The V2 dictionaries are shared by 104M and 316M ("gc104M" = Genecorpus-104M).
+# Reference-state centroids and probes are tied to ONE model's embedding space:
+# never reuse 104M (768-d) artifacts with 316M (1152-d) — cosine shape mismatch.
+# Clone https://huggingface.co/ctheodoris/Geneformer with git-lfs; set repo_dir.
+# -----------------------------------------------------------------------------
+geneformer:
+  repo_dir: ../Geneformer
+  model_version: V2
+  base_model_dir: ../Geneformer/Geneformer-V2-316M
+  hidden_size: 1152               # asserted against the loaded model config
+  model_input_size: 4096
+  special_token: true
+  dictionaries:
+    token: ../Geneformer/geneformer/token_dictionary_gc104M.pkl
+    gene_median: ../Geneformer/geneformer/gene_median_dictionary_gc104M.pkl
+    gene_name_id: ../Geneformer/geneformer/gene_name_id_dict_gc104M.pkl
+    ensembl_mapping: ../Geneformer/geneformer/ensembl_mapping_dict_gc104M.pkl
+
+# -----------------------------------------------------------------------------
+# Cell / feature QC (01_preprocess_data.py). Library-size metrics are computed
+# on GENE counts only, so TE multimapper inflation cannot pass a cell.
+# -----------------------------------------------------------------------------
+qc:
+  min_genes: 500
+  max_genes: 7000
+  min_gene_counts: 1000
+  max_pct_mito: 15.0
+  mito_prefix: "MT-"
+  min_cells_per_gene: 10
+  max_pct_te_counts: 40.0     # cells with implausible TE read fraction (ambient/dying) are dropped
+  doublet_obs_key: null       # e.g. "predicted_doublet" if a scrublet/scDblFinder call exists
+
+# -----------------------------------------------------------------------------
+# Transposable-element features
+# -----------------------------------------------------------------------------
+te:
+  feature_detection:
+    method: annotation          # annotation | var_column | prefix
+    # annotation: TEtranscripts-format GTF (same format TEcount consumes in
+    #   TE_Ocean_Acidification/pipelines/rnaseq/align-and-count.sh) or a
+    #   RepeatMasker .out file; feature names matched against gene_id/family.
+    annotation: data/raw/hg38_rmsk_TE.gtf
+    var_column: feature_type    # method var_column: rows where value == var_value are TEs
+    var_value: te
+    prefix: "SoloTE|"           # method prefix (SoloTE convention)
+  aggregation_level: family     # family | class  (locus-level is out of scope for 10x 3' data)
+  # Repeat classes that are not transposable elements. Matches the `strict_te`
+  # filter adopted in TE_Ocean_Acidification on 2026-09-06.
+  exclude_classes: [Simple_repeat, Low_complexity, Satellite, rRNA, tRNA, snRNA, scRNA, srpRNA, RNA]
+  keep_unknown: true            # kept, but reported as class `Unknown` — never as a resolved call
+  min_cells_detected: 50
+  # Cell-level TE activity score used to define reference states.
+  score:
+    method: log_cpm_sum         # log_cpm_sum | mean_zscore
+    families: all_strict        # all_strict | readout  (readout = te.readout_families)
+  # TE activity states for the classifier and goal-state ISP. Quantiles are
+  # taken WITHIN each stratum so the state is not a proxy for cell type.
+  state:
+    key: te_state
+    stratify_by: [cell_type]
+    low_quantile: 0.25
+    high_quantile: 0.75
+    labels: {low: TE_low, high: TE_high, mid: TE_mid}
+    regress_out: [log_gene_counts, n_genes]   # residualize score on library complexity first
+  # Families scored in the regulator -> TE map. Human RepeatMasker names
+  # (scTE/rmsk). Leave empty to use the top_n most variable strict-TE families.
+  readout_families:
+    - L1HS
+    - L1PA2
+    - L1PA3
+    - AluYa5
+    - AluYb8
+    - SVA_E
+    - SVA_F
+    - HERVK-int
+    - LTR5_Hs
+    - HERVH-int
+    - LTR7
+    - MER41B
+  readout_top_n: 50
+
+# -----------------------------------------------------------------------------
+# Joint gene-TE token space
+#   readout  — Geneformer vocabulary untouched. Only genes are tokenized; TE
+#              expression enters as cell states (te_state) and as the target
+#              of a linear probe on the CLS embedding. Default; no retraining
+#              of embeddings required.
+#   extended — TE families become new tokens ("TE:<family>") appended to the
+#              V2 dictionaries with data-derived median factors; the embedding
+#              matrix is resized and the new rows MUST be trained (fine-tuning
+#              at minimum, continued MLM pretraining preferably) before any
+#              perturbation result is interpreted. Experimental.
+# -----------------------------------------------------------------------------
+vocab:
+  mode: readout
+  te_token_prefix: "TE:"
+
+# -----------------------------------------------------------------------------
+# Donor-disjoint split (leakage check is a hard failure, not a warning)
+# -----------------------------------------------------------------------------
+split:
+  key: split
+  fractions: {train: 0.70, eval: 0.15, test: 0.15}
+  min_donors_per_split: 3
+  stratify_by: condition
+
+# -----------------------------------------------------------------------------
+# Cell-state classifier fine-tuned on top of Geneformer-V2-316M in bf16
+# (hyperparameters mirror sclc_validation/bf16_bench/run_finetune_316m.py)
+# -----------------------------------------------------------------------------
+classifier:
+  state_key: te_state           # must NOT be te_state when vocab.mode == extended (label leakage)
+  states: [TE_low, TE_high]     # TE_mid cells are excluded from training
+  freeze_layers: 6
+  forward_batch_size: 16
+  nproc: 4
+  training_args:
+    num_train_epochs: 1
+    learning_rate: 5.0e-5
+    per_device_train_batch_size: 8
+    lr_scheduler_type: linear
+    warmup_steps: 100
+    weight_decay: 0.001
+    seed: 43
+    save_strategy: epoch
+    logging_steps: 50
+    report_to: none
+    bf16: true                  # bf16 training -> exact logit ties; eval_tie_fix is installed automatically
+  # Pre-ISP gate (02 stage `classifier-qc`). `isp` and `te-map` refuse to run
+  # unless every criterion passes; --skip-gate overrides and is recorded in
+  # provenance. All metrics are on donor-held-out TEST cells.
+  qc:
+    n_bootstrap: 2000             # donor-level bootstrap for CIs (donors resampled, not cells)
+    min_macro_f1: 0.65
+    min_auroc: 0.70
+    # Lower 95% CI bound of macro F1 must beat the majority-class baseline...
+    require_ci_above_majority: true
+    # ...and a logistic regression on library-complexity covariates alone by
+    # this margin. If depth explains the label, the model learned depth.
+    confound_covariates: [log_gene_counts, n_genes, pct_mito]
+    min_margin_over_confound: 0.05
+    # Within each true class, |Spearman rho| between P(TE_high) and log gene
+    # counts must stay below this (the model should not track depth).
+    max_abs_depth_rho: 0.30
+    # Every stratum (cell type, condition) with enough test cells must work.
+    strata: [cell_type, condition]
+    min_cells_per_stratum: 100
+    min_stratum_macro_f1: 0.55
+    max_ece: 0.10                 # expected calibration error, 10 bins
+    max_tie_rate: 0.01            # bf16 exact-logit ties among eval votes
+    # The TE_low / TE_high training centroids must be separable; cosine near 1
+    # means goal-state shifts are not interpretable.
+    max_centroid_cosine: 0.995
+
+# -----------------------------------------------------------------------------
+# In silico perturbation
+# -----------------------------------------------------------------------------
+isp:
+  perturb_types: [delete, overexpress]
+  emb_mode: cls
+  emb_layer: 0                  # Geneformer convention: 0 = final layer, -1 = penultimate
+  forward_batch_size: 32        # 316M; raise if GPU memory allows
+  # MUST stay 1 on GPU: InSilicoPerturber loads the model to CUDA before
+  # Dataset.map(num_proc=...) forks, which crashes with "Cannot re-initialize
+  # CUDA in forked subprocess" (documented in geneformer-lung-tcell).
+  nproc: 1
+  max_ncells_per_target: 2000
+  max_cells_per_donor: 100      # cap so one donor cannot dominate a target's estimate
+  overexpress_require_expressed: true   # mirror Geneformer: only cells already expressing the target
+  # Goal-state directions; each is one InSilicoPerturber run per target.
+  directions:
+    - {name: low_to_high, start_state: TE_low, goal_state: TE_high, alt_states: []}
+    - {name: high_to_low, start_state: TE_high, goal_state: TE_low, alt_states: []}
+
+# -----------------------------------------------------------------------------
+# Perturbation targets (HGNC symbols; resolved to Ensembl at runtime through
+# geneformer.dictionaries.gene_name_id — unresolved symbols are logged and
+# skipped, never guessed). `expected` is the PRE-REGISTERED direction of the
+# shift toward TE_high and is used only for the positive-control check.
+# -----------------------------------------------------------------------------
+targets:
+  krab_zfp_kap1:
+    expected: {delete: up}
+    genes: [TRIM28, SETDB1, ATF7IP, ZNF91, ZNF93, ZNF417, ZNF587, ZNF649]
+  hush_complex:
+    expected: {delete: up}
+    genes: [TASOR, MPHOSPH8, PPHLN1, MORC2, SETDB1]
+  dna_methylation:
+    expected: {delete: up}
+    genes: [DNMT1, DNMT3A, DNMT3B, UHRF1]
+  histone_h3k9_h3k27:
+    expected: {delete: up}
+    genes: [SUV39H1, SUV39H2, EHMT2, EZH2, KDM1A]
+  chromatin_remodel_h33:
+    expected: {delete: up}
+    genes: [DAXX, ATRX, SMARCAD1, CHAF1A]
+  rna_level_silencing:
+    expected: {delete: up}
+    genes: [METTL3, YTHDC1, SAFB, MOV10, TEX19]
+  te_activating_tfs:
+    expected: {overexpress: up}
+    genes: [YY1, RUNX3, MYC, DUX4]
+  genome_guardians:
+    expected: {delete: up}
+    genes: [TP53, RB1]
+
+positive_controls: [TRIM28, SETDB1, DNMT1]   # analysis flags the run if these fail their expected direction
+
+# Viral-mimicry / innate sensing genes are READOUTS, not perturbation targets:
+# they are scored as downstream shifts alongside TE families.
+readout_genes: [IFIH1, RIGI, MAVS, IRF7, ISG15, OAS1, ZBP1, CGAS, STING1]
+
+# -----------------------------------------------------------------------------
+# Expression-matched null genes (per target, same cells, same arm)
+# -----------------------------------------------------------------------------
+null:
+  n_genes_per_target: 20
+  match_on: [detection_rate, mean_rank]
+  n_bins: 10
+  exclude_groups: true          # null pool excludes every gene listed under targets/readout_genes
+
+# -----------------------------------------------------------------------------
+# Linear probe: CLS embedding -> TE family expression (fit on TRAIN cells,
+# evaluated on EVAL cells; families below min_eval_r2 are not reported)
+# -----------------------------------------------------------------------------
+probe:
+  model: ridge
+  alphas: [0.1, 1.0, 10.0, 100.0, 1000.0]
+  cv_folds: 5
+  min_eval_r2: 0.05
+  target_transform: log1p_cpm_zscore
+  max_train_cells: 20000
+
+# -----------------------------------------------------------------------------
+# Downstream statistics and figures (03_downstream_analysis.py)
+# -----------------------------------------------------------------------------
+analysis:
+  aggregation_unit: donor       # effects are averaged within donor before testing
+  min_cells_per_donor: 10
+  min_donors: 3
+  fdr: 0.05
+  contrast_key: condition       # differential network across levels of this obs column
+  contrast_levels: null         # null -> all pairs of observed levels
+  n_permutations: 1000
+  network_edge_fdr: 0.05
+  umap: {n_neighbors: 30, min_dist: 0.3, metric: cosine}
+
+runtime:
+  device: auto                  # auto | cuda | cpu | mps  (bf16 requires an Ampere+ CUDA GPU)
+  # Inference AND fine-tuning dtype. bf16 is applied to ISP by casting the
+  # model returned by geneformer.perturber_utils.load_model (monkeypatch, no
+  # upstream edit) and needs the `.float()` numpy-export fix from
+  # geneformer-lung-tcell/sclc_validation/bf16_bench/geneformer-bf16-export.patch.
+  dtype: bf16                   # bf16 | fp32
+  # fp32-vs-bf16 precision canary: a few targets re-run in fp32 on identical
+  # cells. 316M lung precedent: rho 0.99867, sign agreement 60/60.
+  canary:
+    enabled: true
+    n_targets: 10
+    min_spearman: 0.95
+    min_sign_agreement: 0.95
+  resume: true                  # skip units with a completion marker
+  log_level: INFO
+
+# -----------------------------------------------------------------------------
+# Bulk ground-truth validation (04_bulk_validation.py; see
+# docs/BULK_PERTURBATION_VALIDATION.md). Public knockout / knockdown /
+# overexpression RNA-seq of the configured targets — located through
+# PerturbAtlas (Zhang et al. 2025, NAR, doi:10.1093/nar/gkae851) or KnockTF 2.0
+# — is re-quantified for TEs with TEcount and compared against ISP predictions
+# and against an observational (no-perturbation) baseline.
+# PerturbAtlas itself provides gene/transcript/splicing tables but NO TE
+# quantification, so its role here is study discovery + gene-level checks.
+# -----------------------------------------------------------------------------
+bulk_validation:
+  # Curated study manifest, one row per (study, perturbed run or control run).
+  # Built by hand or exported from PerturbAtlas / KnockTF metadata; map your
+  # column names here rather than renaming the file.
+  manifest: data/bulk/perturbation_studies.tsv
+  columns:
+    study_id: study_id            # e.g. PerturbAtlas term ID or GEO series
+    run: run_accession            # SRR / ERR / DRR
+    role: role                    # control | perturbed
+    target: target_symbol         # HGNC symbol of the perturbed gene
+    perturbation: perturbation    # KO | KD | CRISPRi | OE | KI | Mut
+    species: species
+    sample_type: sample_type      # cell line / tissue, free text
+    layout: layout                # PAIRED | SINGLE
+    strandedness: strandedness    # no | forward | reverse (TEcount --stranded)
+  species: [homo_sapiens]         # mouse/zebrafish rows are kept for regulator-level checks only
+  arm_of: {KO: delete, KD: delete, CRISPRi: delete, OE: overexpress, CRISPRa: overexpress}
+  min_replicates: 2               # per role per study (PerturbAtlas' own inclusion floor)
+  fastq_dir: data/bulk/fastq      # <run>_1.fastq.gz / <run>_2.fastq.gz (or <run>.fastq.gz)
+  # TE re-quantification reuses TE_Ocean_Acidification/pipelines/rnaseq/align-and-count.sh
+  # (STAR + TEcount --mode multi) with a human TE GTF; outputs land here:
+  tecount_dir: data/bulk/tecount
+  # Per-study DESeq2 tables (perturbed vs control), one TSV per study with
+  # columns feature, baseMean, log2FoldChange, padj. TEcount feature names
+  # "family:superfamily:class" are parsed to family.
+  te_de_dir: data/bulk/te_de
+  de_padj: 0.05
+  de_min_abs_lfc: 0.5
+  min_base_mean: 10
+  # Observational baseline: the sign a regulator's knockout "should" have on a
+  # TE family if one read it straight off single-cell co-expression (no model).
+  # ISP must beat this baseline to claim it adds anything.
+  baseline_min_cells_expressing: 50
+
+# -----------------------------------------------------------------------------
+# Simple bulk ISP (05_bulk_linear_isp.py): CellOracle-style linear network
+# (Kamimoto et al. 2023, Nature, doi:10.1038/s41586-022-05688-9) over bulk
+# libraries with genes and TE families counted together (TEcount). CPU-only.
+# Works for non-human data directly (no tokenizer, no orthology needed), e.g.
+# the 162-library A. polyacanthus cohort in TE_Ocean_Acidification.
+# -----------------------------------------------------------------------------
+bulk_isp:
+  counts: data/bulk_isp/counts            # dir of *.cntTable, or one feature x sample TSV
+  samples: data/bulk_isp/samples.tsv
+  sample_id_col: sample_id
+  gene_id_prefix: "gene-"                 # stripped from gene rows (NCBI GTF convention); "" for none
+  # Regress out the top-k TE-block principal components (global TE load) from
+  # all features before fitting. 0 = off. In the A. polyacanthus cohort TE PC1
+  # explained 29% of within-stratum TE variance and tracked TE read fraction
+  # (r = 0.87); without removal, effects mirror each gene's correlation with it.
+  remove_te_pcs: 0
+  exclude_where: null                     # e.g. {column: source_study_outlier, value: "yes"}
+  # Centre/scale within each combination of these columns. NOT optional in
+  # practice: on synthetic data with an opposing tissue effect, dropping it
+  # flipped the sign of a planted TRIM28 -> L1 repression and gave every
+  # random TE family a large spurious effect, with CV R2 still looking fine.
+  stratify_by: [tissue]                   # e.g. [tissue, treatment]
+  scale: true
+  min_count: 10
+  min_samples: 10
+  # Regulators = config `targets` symbols (case-insensitive, one optional
+  # trailing paralog letter: setdb1a/setdb1b) plus these regexes:
+  extra_regulator_patterns: []            # e.g. ["^znf\\d+$"] for teleost KRAB-like ZNFs
+  alphas: [1, 10, 100, 1000, 10000]
+  cv_folds: 5
+  min_cv_r2: 0.05                         # TE families predicted worse than this are not reported
+  perturb_types: [delete, overexpress]
+  clamp_quantiles: {delete: 0.01, overexpress: 0.99}
+  n_steps: 3                              # CellOracle default; step 1 (direct only) is always reported too
+  n_bootstrap: 200
+  n_permutations: 1000                    # p floor = 1/1001; regulators x 1000 small refits

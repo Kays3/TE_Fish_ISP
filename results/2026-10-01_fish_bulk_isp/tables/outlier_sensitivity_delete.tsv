@@ -1,0 +1,15 @@
+	value
+pairs	66150.0
+spearman	0.9850396500651516
+spearman_ci95_low	0.9847978380538598
+spearman_ci95_high	0.9852776442430523
+spearman_p	0.0
+sig_all	16071.0
+sig_no_outliers	15613.0
+sig_both	14125.0
+jaccard	0.8044307762401048
+p_hypergeom_overlap	0.0
+sign_agree_both	14125.0
+sign_agree_frac	1.0
+sign_agree_ci95_low	0.9997388744918199
+sign_agree_ci95_high	1.0
