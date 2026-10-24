@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# compute host 1: per-study DESeq2 (apeglm) in the frozen OA environment (DESeq2 1.46.0, apeglm 1.28.0).
+# thinkstation1: per-study DESeq2 (apeglm) in the frozen OA environment (DESeq2 1.46.0, apeglm 1.28.0).
 set -uo pipefail
 # Shared host: cap BLAS/OpenMP threads so a GPU job's data loading is not starved.
 export OPENBLAS_NUM_THREADS=${DESEQ_THREADS:-4} OMP_NUM_THREADS=${DESEQ_THREADS:-4} MKL_NUM_THREADS=${DESEQ_THREADS:-4}
-N=${DATA_ROOT}/te-oa-full/zf-te-validation-20261001
-G=$REPO_ROOT
-R=${RSCRIPT:-Rscript}
-L=$ZF_DESEQ; mkdir -p $L/sheets $L/te_de $L/counts
+N=/mnt/nas/kaisar/te-oa-full/zf-te-validation-20261001
+G=~/workspace/Geneformer_TE
+R=~/micromamba/envs/deseq-frozen/bin/Rscript
+L=~/workspace/zf_deseq_ts1; mkdir -p $L/sheets $L/te_de $L/counts
 until [ -s $N/COUNTS_READY ]; do sleep 300; done
 cp $N/counts/*.cntTable $L/counts/
 python3 - <<PY

@@ -2,7 +2,7 @@
 # Wait for downloads + reference, then align and count all zebrafish runs with the
 # TE_Ocean_Acidification pipeline (fastp -> STAR -> TEcount --mode multi).
 set -uo pipefail
-W=$ZF_WORK; E=$W/env/te-ocean-acidification; R=$W/reference
+W=~/workspace/zf_te_validation; E=$W/env/te-ocean-acidification; R=$W/reference
 mkdir -p $W/wrappers
 cat > $W/wrappers/TEcount <<WR
 #!/usr/bin/env bash
@@ -15,7 +15,7 @@ until grep -q "reference done" $W/logs/STATUS 2>/dev/null && grep -q "download e
 # sample sheet: only runs whose every FASTQ verified
 $E/bin/python - <<PY
 import csv, os
-W = os.path.expanduser("$ZF_WORK")
+W = os.path.expanduser("~/workspace/zf_te_validation")
 rows = list(csv.DictReader(open(f"{W}/zebrafish_perturbation_studies.tsv"), delimiter="\t"))
 out, missing = [], []
 for r in rows:

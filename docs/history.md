@@ -3,7 +3,7 @@
 What the floor ran, what it measured and what it could not show. There was one fish in silico perturbation (ISP)
 run, a bulk linear ISP on the *Acanthochromis polyacanthus* ocean-acidification (OA) cohort, and one ground-truth
 study that tested it against 17 zebrafish knockout, knockdown and overexpression contrasts. Every number below is
-quoted from a committed report or table in `results/`; where a claim was not checked it is marked. Times are JST.
+quoted from a committed report or table in `docs/runs/`; where a claim was not checked it is marked. Times are JST.
 
 Result wording follows ISP-STD-1 v1.1 (status vocabulary: `positive`, `negative`, `opposite_direction`,
 `not_estimable`, `control_draw_sensitive_open`, `no_op_failed`, `not_run_by_design`, `stopped_not_analysed`). The
@@ -13,8 +13,8 @@ fish run is described by the criterion it did not meet (B1, matched controls), n
 
 | Study | Reading | Source |
 |---|---|---|
-| Fish bulk ISP, 30 TE regulators | B1 not met: the regulators were not distinguishable from 90 expression-matched random genes, plain or with the TE axis removed | `results/2026-10-01_fish_bulk_isp/RUN_RECORD.md`, `tables/05c_*` |
-| Zebrafish ground truth, 17 contrasts | 0 of 16 loss-of-function studies shifted global TE share at FDR < 0.05; weakly powered | `results/2026-10-01_zebrafish_validation/REPORT.md` |
+| Fish bulk ISP, 30 TE regulators | B1 not met: the regulators were not distinguishable from 90 expression-matched random genes, plain or with the TE axis removed | `docs/runs/2026-10-01_fish_bulk_isp/RUN_RECORD.md`, `tables/05c_*` |
+| Zebrafish ground truth, 17 contrasts | 0 of 16 loss-of-function studies shifted global TE share at FDR < 0.05; weakly powered | `docs/runs/2026-10-01_zebrafish_validation/REPORT.md` |
 | Fish prediction against zebrafish response | Not supported: Spearman rho = -0.18 (p = 0.50, n = 17); the test crosses species, tissue and perturbation type | `tables/08_prediction_concordance.tsv`, `08f_exploratory_concordance.tsv` |
 
 The fish run used 0 GPU-hours. The standard cited is ISP-STD-1 v1.1; the fish work predates the E3 cross-evaluation
@@ -63,11 +63,10 @@ the design cannot separate the two.
 
 A side result from the same cohort, outside ISP: developmental CO2 exposure lowered the TE read share in gill by
 11.4% [5.1, 17.2] (FDR 0.005); brain and liver were inconclusive
-(`results/2026-10-01_te_axis_treatment/REPORT.md`). What the TE axis is biologically (nascent or intronic RNA
+(`docs/runs/2026-10-01_te_axis_treatment/REPORT.md`). What the TE axis is biologically (nascent or intronic RNA
 fraction, or cell composition) was left open.
 
-Figure: `figures/2026-10-01_fish_bulk_isp/05_fig1_real_vs_random.png` (new in this repository; plots the saved 05c
-values).
+The 05 run drew no figure.
 
 ## 2. The zebrafish ground truth
 
@@ -102,7 +101,7 @@ coincide with library-quality differences.
 | GSE234993 unique mapping | 20.6% mutant vs 26.9% control (read 1) |
 | Review | science and numbers review passed at `246c3e4` and `95031c8` (source repository), final |
 
-Figures 1 to 3 of that report are `figures/2026-10-01_zebrafish_validation/08_fig{1,2,3}_*.png`.
+Figures 1 to 3 of that report are `docs/runs/2026-10-01_zebrafish_validation/figures/08_fig{1,2,3}_*.png`.
 
 ## 3. Prediction against ground truth
 
@@ -149,7 +148,7 @@ confounding.
   perturbation data or a perturbation experiment in fish cells, and reruns removing two or three TE components with
   matched random controls) were not started.
 - The 13 October talk list marked the zebrafish "6 of 8 / rho -0.18" pair as not verified, because the gate had not
-  opened the source. Both numbers are in `results/2026-10-01_zebrafish_validation/REPORT.md` as quoted above.
+  opened the source. Both numbers are in `docs/runs/2026-10-01_zebrafish_validation/REPORT.md` as quoted above.
   This history was compiled from committed material only; nothing was recomputed.
 
 ## 6. Relation to the E3 criteria work

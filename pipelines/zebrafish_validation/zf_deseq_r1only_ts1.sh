@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# compute host 1: DESeq2 on the GSE234993 read-1-only counts (DC-16), same
+# thinkstation1: DESeq2 on the GSE234993 read-1-only counts (DC-16), same
 # clutch-blocked design (~ block + role) and frozen env as the main run.
-# Waits for NAS r1only/R1ONLY_READY (written by the GPU host run, DC-17).
+# Waits for NAS r1only/R1ONLY_READY (written by the dgx run, DC-17).
 set -uo pipefail
 export OPENBLAS_NUM_THREADS=${DESEQ_THREADS:-4} OMP_NUM_THREADS=${DESEQ_THREADS:-4} MKL_NUM_THREADS=${DESEQ_THREADS:-4}
-N=${DATA_ROOT}/te-oa-full/zf-te-validation-20261001
-G=$REPO_ROOT
-R=${RSCRIPT:-Rscript}
-L=$ZF_DESEQ/r1only; mkdir -p $L/counts
+N=/mnt/nas/kaisar/te-oa-full/zf-te-validation-20261001
+G=~/workspace/Geneformer_TE
+R=~/micromamba/envs/deseq-frozen/bin/Rscript
+L=~/workspace/zf_deseq_ts1/r1only; mkdir -p $L/counts
 STUDY=ZF_uhrf1_liver_2023
 until [ -s $N/r1only/R1ONLY_READY ]; do sleep 300; done
 cp $N/r1only/counts/*.cntTable $L/counts/

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Resumable, checksum-verified download of the zebrafish validation panel (ENA + references).
 set -uo pipefail
-W=$ZF_WORK
+W=~/workspace/zf_te_validation
 mkdir -p $W/fastq $W/reference $W/logs
 cd $W
 fetch() {  # url md5 bytes

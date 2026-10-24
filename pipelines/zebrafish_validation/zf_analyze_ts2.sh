@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# compute host 2: run the zebrafish validation analysis once DESeq2 has finished.
+# thinkstation2: run the zebrafish validation analysis once DESeq2 has finished.
 set -uo pipefail
-N=${DATA_ROOT}/te-oa-full/zf-te-validation-20261001
-G=$REPO_ROOT
+N=/mnt/nas/kaisar/te-oa-full/zf-te-validation-20261001
+G=~/workspace/Geneformer_TE
 until [ -s $N/DESEQ_DONE ]; do sleep 300; done
 cd $G && git pull -q --ff-only
 mkdir -p runs/zf_validation_20261001/fish05c

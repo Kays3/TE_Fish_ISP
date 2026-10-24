@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# alignment host: after alignment, publish the small count outputs to the NAS for DESeq2 on compute host 1.
+# pSS: after alignment, publish the small count outputs to the NAS for DESeq2 on thinkstation1.
 set -uo pipefail
-W=$ZF_WORK
-N=${DATA_ROOT}/te-oa-full/zf-te-validation-20261001
+W=~/workspace/zf_te_validation
+N=/mnt/nas/kaisar/te-oa-full/zf-te-validation-20261001
 until grep -q "align exit" $W/logs/STATUS 2>/dev/null; do sleep 300; done
 mkdir -p $N/counts $N/qc
 for f in $W/rnaseq/counts/*/*.cntTable; do cp "$f" $N/counts/; done

@@ -8,15 +8,15 @@ lists every FASTQ with its ENA MD5.
 
 | Step | Host | Script |
 |---|---|---|
-| Download FASTQs (MD5-verified, resumable) and references | alignment host | `zf_download.sh` |
-| GRCz11 STAR index; TE GTF from UCSC danRer11 RepeatMasker (`make_te_gtf.py`; UCSC to Ensembl contig names, alt haplotypes dropped) | alignment host | `zf_build_reference.sh` |
-| fastp, STAR and TEcount `--mode multi`, unstranded (TE_Ocean_Acidification `align-and-count.sh`) | alignment host | `zf_align.sh` |
-| Publish count tables, alignment QC and gene names to the NAS | alignment host | `zf_postalign.sh` |
-| Per-study DESeq2 with apeglm (frozen OA environment: DESeq2 1.46.0, apeglm 1.28.0) | compute host 1 | `zf_deseq_ts1.sh` |
-| Statistics and figures (`scripts/08_zebrafish_validation.py`) | compute host 2 | `zf_analyze_ts2.sh` |
+| Download FASTQs (MD5-verified, resumable) and references | pSS | `zf_download.sh` |
+| GRCz11 STAR index; TE GTF from UCSC danRer11 RepeatMasker (`make_te_gtf.py`; UCSC to Ensembl contig names, alt haplotypes dropped) | pSS | `zf_build_reference.sh` |
+| fastp, STAR and TEcount `--mode multi`, unstranded (TE_Ocean_Acidification `align-and-count.sh`) | pSS | `zf_align.sh` |
+| Publish count tables, alignment QC and gene names to the NAS | pSS | `zf_postalign.sh` |
+| Per-study DESeq2 with apeglm (frozen OA environment: DESeq2 1.46.0, apeglm 1.28.0) | thinkstation1 | `zf_deseq_ts1.sh` |
+| Statistics and figures (`scripts/08_zebrafish_validation.py`) | thinkstation2 | `zf_analyze_ts2.sh` |
 
 Each step waits for the previous step's marker, so the chain runs
-unattended. Shared outputs go to `${DATA_ROOT}/te-oa-full/zf-te-validation-20261001/`.
+unattended. Shared outputs go to `/mnt/nas/kaisar/te-oa-full/zf-te-validation-20261001/`.
 
 Counting is unstranded for every study, because library strandedness is not
 reliably annotated across these submissions. This costs some resolution for

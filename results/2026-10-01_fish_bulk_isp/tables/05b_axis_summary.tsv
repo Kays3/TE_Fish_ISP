@@ -1,2 +1,0 @@
-n_samples	n_strata	n_te_families	te_pc1_var_explained	te_pc2_var_explained	frac_families_same_sign	p_binom_same_sign	gene_pc1_var_explained
-162	9	2205	0.29322996176521804	0.03529765025050523	0.9682539682539683	0.0	0.09297612660274804

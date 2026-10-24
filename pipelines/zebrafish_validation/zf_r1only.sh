@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# alignment host: sensitivity analysis for GSE234993 (ZF_uhrf1_liver_2023). Mutants map
+# pSS: sensitivity analysis for GSE234993 (ZF_uhrf1_liver_2023). Mutants map
 # ~7 points lower than controls (unique %), driven by "too short" pairs after
 # adapter trimming, so realign that study with read 1 only. Waits for the main
 # alignment to exit, because align-and-count.sh removes STAR's shared genome on
 # exit. Outputs to rnaseq_r1only/ and NAS r1only/.
 set -uo pipefail
-W=$ZF_WORK; E=$W/env/te-ocean-acidification; R=$W/reference
-N=${DATA_ROOT}/te-oa-full/zf-te-validation-20261001
+W=~/workspace/zf_te_validation; E=$W/env/te-ocean-acidification; R=$W/reference
+N=/mnt/nas/kaisar/te-oa-full/zf-te-validation-20261001
 export PATH=$W/wrappers:$E/bin:$PATH
 until grep -q "align exit" $W/logs/STATUS 2>/dev/null; do sleep 300; done
 STUDY=ZF_uhrf1_liver_2023

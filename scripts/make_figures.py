@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Rebuild every figure of the fish ISP work from the saved result tables in results/.
+"""Rebuild the ten committed figures of the fish ISP work from the saved result tables in docs/runs/*/tables/.
 
-No counts, no NAS, no GPU: tables in, figures out. Takes about a minute on a laptop.
+No counts, no NAS, no GPU: tables in, figures out. Takes seconds.
 
-  python scripts/make_figures.py [--out figures]
+  python scripts/make_figures.py [--out rebuilt] [--check]
 
-Writes figures/<run>/<name>.png and .pdf. PDFs are made reproducible with SOURCE_DATE_EPOCH.
-Figure code is imported from the original analysis scripts where they expose it
-(07 make_figures, 08 figures) and from fig05_plots.py and fig06_plots.py where they did not (05, 06;
-fig05 is new to this repository and plots saved 05c values only).
+Writes <out>/<run>/<name>.png and .pdf (06: 2 figures, 07: 5, 08: 3). With --check, compares each rebuilt PNG with the
+PNG committed in docs/runs/<run>/figures/ (sha256) and exits 1 on any difference. Byte identity holds only with the
+pinned environment (environment/README.md): matplotlib draws a different layout in other minor versions.
+Figure code is imported from the original analysis scripts where they expose it (07 make_figures, 08 figures)
+and from fig06_plots.py, a verbatim copy of the inline plotting block of 06, where they did not.
+The 05 run drew no figure and none is invented here.
 """
 from __future__ import annotations
 
@@ -24,7 +26,7 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-RES = ROOT / "results"
+RES = ROOT / "docs" / "runs"  # committed tables live next to the run records, as in the source repository
 
 
 def _load(name: str, file: str):
@@ -32,11 +34,6 @@ def _load(name: str, file: str):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
-
-
-def fig05(out: Path) -> None:
-    d = out / "2026-10-01_fish_bulk_isp"; d.mkdir(parents=True, exist_ok=True)
-    _load("fig05_plots", "fig05_plots.py").plot_05(RES / "2026-10-01_fish_bulk_isp" / "tables", d)
 
 
 def fig06(out: Path) -> None:
@@ -69,12 +66,24 @@ def fig08(out: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--out", default=str(ROOT / "figures"))
+    ap.add_argument("--out", default=str(ROOT / "rebuilt"))
+    ap.add_argument("--check", action="store_true", help="compare rebuilt PNGs with the committed PNGs")
     args = ap.parse_args()
     out = Path(args.out)
-    for f in (fig05, fig06, fig07, fig08):
+    for f in (fig06, fig07, fig08):
         f(out)
         print("done", f.__name__)
+    if args.check:
+        import hashlib
+        h = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
+        bad = 0
+        for p in sorted(out.glob("*/*.png")):
+            ref = RES / p.parent.name / "figures" / p.name
+            ok = ref.exists() and h(p) == h(ref)
+            bad += not ok
+            print(("identical  " if ok else "DIFFERENT  ") + f"{p.parent.name}/{p.name}")
+        print(f"{bad} of {len(list(out.glob('*/*.png')))} PNGs differ from the committed figures")
+        raise SystemExit(1 if bad else 0)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-command driver for the fish ISP work.
 #
-#   scripts/run_all.sh            # = figures: rebuild every figure from results/ (about 5 s, no data needed)
+#   scripts/run_all.sh            # = figures: rebuild the 10 figures from docs/runs/*/tables and compare with the committed PNGs (seconds, no data)
 #   scripts/run_all.sh verify     # checksums of repository files, figures and (DATA_ROOT set) the large inputs
 #   scripts/run_all.sh compute    # recompute the tables from the counts (needs DATA_ROOT; heavy, see below)
 #   scripts/run_all.sh all        # verify, compute, figures
@@ -22,18 +22,17 @@ THREADS="${THREADS:-10}"
 
 stage_verify() { scripts/verify_inputs.sh; }
 
-stage_figures() { "$PY" scripts/make_figures.py --out figures; }
+stage_figures() { "$PY" scripts/make_figures.py --out rebuilt --check; }
 
 stage_compute() {
   : "${DATA_ROOT:?set DATA_ROOT to the directory that contains te-oa-full/}"
-  command -v envsubst >/dev/null || { echo "envsubst (gettext) is required to render the configs"; exit 1; }
   export DATA_ROOT OMP_NUM_THREADS="$THREADS" OPENBLAS_NUM_THREADS="$THREADS"
   mkdir -p runs
   cp data/small_inputs/*.tsv runs/
-  # configs: ${DATA_ROOT} is the only variable; runs/ is the working directory the configs refer to
-  for f in results/2026-10-01_fish_bulk_isp/configs/*.yaml results/2026-10-01_gene_axis/configs/*.yaml \
-           results/2026-10-01_te_axis_treatment/configs/*.yaml; do
-    envsubst '${DATA_ROOT}' < "$f" > "runs/$(basename "$f")"
+  # configs: the historical NAS prefix (/mnt/nas/kaisar) is replaced by DATA_ROOT; runs/ is the working directory the configs refer to
+  for f in docs/runs/2026-10-01_fish_bulk_isp/configs/*.yaml docs/runs/2026-10-01_gene_axis/configs/*.yaml \
+           docs/runs/2026-10-01_te_axis_treatment/configs/*.yaml; do
+    sed "s|/mnt/nas/kaisar|$DATA_ROOT|g" "$f" > "runs/$(basename "$f")"
   done
   for s in 2 3; do
     sed "s/fish_random1/fish_random$s/g" runs/fish_random1.yaml > "runs/fish_random$s.yaml"
@@ -72,7 +71,7 @@ stage_compute() {
   "$PY" scripts/08d_te_share_contributors.py "$N/counts" "$N/samples_all.tsv" ZF_hUHRF1_OE_liver_2023 \
       "$T/08d_hUHRF1_OE_te_share_contributors.tsv" "$N/qc"
   "$PY" scripts/08f_exploratory_concordance.py "$T"
-  echo "compute done; new tables are under runs/ (compare with results/ using diff or the 05c/08 tables)"
+  echo "compute done; new tables are under runs/ (compare with docs/runs/*/tables using diff or the 05c/08 tables)"
   echo "08b and 08e need the DESeq2 working folders (mapcov, r1only, noblock): see pipelines/zebrafish_validation/"
 }
 

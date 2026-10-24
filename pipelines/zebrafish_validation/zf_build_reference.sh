@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-W=$ZF_WORK; E=$W/env/te-ocean-acidification; R=$W/reference
+W=~/workspace/zf_te_validation; E=$W/env/te-ocean-acidification; R=$W/reference
 cd $R
 [ -f genome.fa ] || zcat Danio_rerio.GRCz11.dna.primary_assembly.fa.gz > genome.fa
 [ -f genes.gtf ] || zcat Danio_rerio.GRCz11.112.gtf.gz > genes.gtf

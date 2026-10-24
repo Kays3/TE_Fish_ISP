@@ -4,7 +4,7 @@
 # Finishes with "align exit=..." in logs/STATUS once downloads are done and every
 # verified run has been processed.
 set -uo pipefail
-W=$ZF_WORK; E=$W/env/te-ocean-acidification; R=$W/reference
+W=~/workspace/zf_te_validation; E=$W/env/te-ocean-acidification; R=$W/reference
 mkdir -p $W/wrappers
 cat > $W/wrappers/TEcount <<WR
 #!/usr/bin/env bash
@@ -18,7 +18,7 @@ while :; do
   dl_done=0; grep -q "download exit" $W/logs/STATUS 2>/dev/null && dl_done=1
   $E/bin/python - <<PY
 import csv, os
-W = os.path.expanduser("$ZF_WORK")
+W = os.path.expanduser("~/workspace/zf_te_validation")
 rows = list(csv.DictReader(open(f"{W}/zebrafish_perturbation_studies.tsv"), delimiter="\t"))
 out = []
 for r in rows:
