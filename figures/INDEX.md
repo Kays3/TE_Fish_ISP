@@ -8,7 +8,7 @@ NAS and no GPU are needed:
 PYTHON=<pinned env python> scripts/run_all.sh figures      # = make_figures.py --out rebuilt --check
 ```
 
-`--check` compares each rebuilt PNG with the committed one by sha256. With the pinned environment
+`--check` compares each rebuilt PNG with the committed one by sha256. With the pinned environment on Linux x86_64
 (`environment/README.md`, matplotlib 3.11.2) all ten are identical; with another matplotlib minor version the data are
 the same and the layout shifts. PDFs are rebuilt too but carry a creation date, so they are not compared by bytes.
 Checksums of the committed PNGs are in `manifests/figures.sha256`.
