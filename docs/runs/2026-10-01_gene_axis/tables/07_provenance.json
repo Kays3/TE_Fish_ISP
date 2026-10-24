@@ -1,0 +1,16 @@
+{
+  "utc": "2026-10-01T09:59:29.698298+00:00",
+  "python": "3.11.15",
+  "platform": "Linux-6.17.0-1029-nvidia-aarch64-with-glibc2.39",
+  "repo_commit": "71654f096706fd0f5c345dc61baffc9df17943ee",
+  "config_path": "/home/kaisar/workspace/Geneformer_TE/runs/fish_gene_axis_20261001.yaml",
+  "config_sha256": "d92139a4c3303dfd97103622b28719586f03b2d90e75cc7eee1f4acd301a2516",
+  "gene_sets": "config/gene_sets_apoly.yaml",
+  "n_random_sets": 10000,
+  "n_boot": 1000,
+  "n_random_genes": 3000,
+  "missing_genes": [
+    "slc2a15b",
+    "tpo"
+  ]
+}

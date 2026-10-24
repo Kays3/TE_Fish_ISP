@@ -1,0 +1,21 @@
+# Geneformer itself is installed from a local clone (see README):
+#   uv pip install -e ../Geneformer
+# and must carry patches/geneformer-bf16-export.patch for runtime.dtype: bf16.
+torch>=2.1
+transformers==4.46
+datasets>=2.12
+accelerate>=0.26
+anndata>=0.9
+scanpy[leiden]>=1.9
+numpy>=1.23
+pandas>=2.0
+pyarrow>=12.0
+scipy>=1.10
+scikit-learn>=1.2
+statsmodels>=0.14
+matplotlib>=3.7
+networkx>=3.0
+umap-learn>=0.5
+pyyaml>=6.0
+tabulate>=0.9
+tqdm>=4.65

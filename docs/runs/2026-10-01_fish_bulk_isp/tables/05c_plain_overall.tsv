@@ -1,0 +1,3 @@
+label	perturb_type	n_regulators	n_random	median_hits_real	median_hits_random	median_abs_effect_real	median_abs_effect_random	n_regulators_p_emp_hits_le_0.05	expected_by_chance	p_binom_excess	n_regulators_fdr_hits_lt_0.05	mw_U_n_fdr05	mw_p_n_fdr05	mw_U_median_abs_effect	mw_p_median_abs_effect
+plain	delete	30	90	393.0	371.0	0.14139648657043802	0.1307154619274717	1	1.5	0.7853612360570624	0	1413.5	0.7025922974536256	1406.0	0.73659666753243
+plain	overexpress	30	90	393.0	371.0	0.13293071897961464	0.13536861918814513	1	1.5	0.7853612360570624	0	1413.5	0.7025922974536256	1342.0	0.963745004895627
