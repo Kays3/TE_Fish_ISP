@@ -59,3 +59,6 @@ Standing rules that follow:
 ## Where `te-oa-full` is now (checked 25 October 2026)
 
 The source page above says `te-oa-full/` had not moved. It has: on 2026-10-05 the 21 small folders (counts, reference, the zebrafish validation outputs and others, 1,936 files, 52,060,194,344 bytes) were copied to an archive host with a sha256 check and the NAS copies removed; a `MOVED_TO.txt` note stays in each emptied folder. `manifests/inputs.sha256.tsv` takes its hashes from that verified copy, and `DATA_ROOT` in `scripts/run_all.sh` points at the archive directory that contains `te-oa-full/`.
+
+
+_Note on the gill CO2 FDR:_ the source repository states it two ways, 0.005 (`te_axis_treatment/REPORT.md`, DC-07, the fish run record) and 0.006 (its README and `gene_axis/REPORT.md`); the rows above quote the source as written. The table value is 0.005562 (`docs/runs/2026-10-01_te_axis_treatment/tables/06_te_axis_treatment_tests.tsv`, `tissue_pooled`, gill, `te_frac_strict`, `developmental_vs_control`), and this repository quotes it as 0.0056.

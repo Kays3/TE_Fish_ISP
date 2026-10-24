@@ -16,9 +16,9 @@ against 17 zebrafish knockout, knockdown and overexpression contrasts.
 
 | Study | Reading under ISP-STD-1 v1.1 |
 |---|---|
-| Fish bulk ISP, 30 regulators, 162 *A. polyacanthus* libraries | B1 not met: real regulators were not distinguishable from random genes, plain (393 vs 371 hits, p = 0.70) or with the global TE axis removed (62.5 vs 68, p = 0.17); 1 of 30 reached empirical p <= 0.05 (1.5 expected); 0 passed BH |
+| Fish bulk ISP, 30 regulators, 162 *A. polyacanthus* libraries | B1 not met (regulators not distinguishable from random genes, and only 3 matched controls per regulator against the 20 per gene B1 asks for, so per-gene status is `not_estimable`): plain (393 vs 371 hits, p = 0.70) or with the global TE axis removed (62.5 vs 68, p = 0.17); 1 of 30 reached empirical p <= 0.05 (1.5 expected); 0 passed BH |
 | Global TE-load axis | one axis carries 29.3% of within-stratum TE variance and tracks TE read fraction (r = 0.87); it drives the plain-mode directions |
-| CO2 and the TE axis | developmental CO2 lowered the TE read share in gill by 11.4% [5.1, 17.2] (FDR 0.005); brain and liver inconclusive |
+| CO2 and the TE axis | developmental CO2 lowered the TE read share in gill by 11.4% [5.1, 17.2] (FDR 0.0056); brain and liver inconclusive |
 | Zebrafish ground truth, 17 contrasts, 112 runs | 0 of 16 loss-of-function studies shifted global TE share at FDR < 0.05; weakly powered, positive controls did not respond |
 | Fish prediction against zebrafish response | not supported: Spearman rho = -0.18 (p = 0.50, n = 17) |
 
@@ -85,7 +85,7 @@ DATA_ROOT=/path scripts/run_all.sh compute   # recompute tables from the counts:
 - **Home paths and host names.** Historical run records, provenance JSONs, run configs and pipeline scripts contain
   the absolute paths and host names of the original Linux run hosts. They are kept as they were run (they are data,
   not configuration of this repository). Every file this repository adds (this README, the driver, manifests, figure
-  code, lock files, history, the data notes) has none; the driver rewrites the historical NAS prefix when it renders configs.
+  code, lock files, history, the data notes) has none; the one exception is `scripts/run_all.sh`, which names the historical NAS prefix as the `sed` pattern that rewrites it to `DATA_ROOT` when it renders configs.
 - **Added files:** `scripts/make_figures.py`, `scripts/fig06_plots.py` (a verbatim copy of the inline plotting block
   of `06_te_axis_treatment.py`, which could not be called without the counts), `scripts/run_all.sh`,
   `scripts/verify_inputs.sh`, `scripts/write_checksums.sh`, `scripts/_sha.sh`, `data/small_inputs/`, `manifests/`,
