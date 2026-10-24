@@ -1,0 +1,4 @@
+prediction	n_studies_with_significant_shift	n_agree	frac_agree	frac_agree_ci95_lo	frac_agree_ci95_hi	p_binom_vs_0.5	fdr_bh
+silencer loss -> TE up (KO/KD only)	0	0					
+fish bulk ISP (plain)	1	0	0.0	0.0	0.975	1.0	1.0
+fish bulk ISP (rmTEpc1)	0	0					

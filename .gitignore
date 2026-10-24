@@ -1,6 +1,6 @@
-runs/
+/runs/
 .venv*/
 __pycache__/
 *.pyc
 .DS_Store
-rebuilt/
+/rebuilt/
