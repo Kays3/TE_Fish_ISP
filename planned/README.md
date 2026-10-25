@@ -8,6 +8,8 @@ two lines of work so that they can reuse the fish ISP code, the manifests and th
 | `acute_te_response/` | How do TE families respond within days of CO2 or temperature exposure, and can a perturbation model say which regulators account for it? | planned, not yet run |
 | `warming/` | The same question for ocean warming in the clownfish *Amphiprion ocellaris*, and for warming against the zebrafish background. | planned, not yet run |
 
+The completed TE-expression analyses both folders start from (acute CO2 in zebrafish; warming in *A. ocellaris* with its rRNA re-check), with their scripts, tables and reports, are in the private repository [Kays3/TE_Acute_Warming](https://github.com/Kays3/TE_Acute_Warming) (`main` at `7049e41`).
+
 Rules both inherit from the fish work (see `docs/history.md`):
 
 1. Register the primary test, sidedness, predicted direction, alpha, minimum attainable p, the multiple-testing
