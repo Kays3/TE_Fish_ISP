@@ -9,9 +9,9 @@
 # Environment: PYTHON (default python3; use the pinned environment, environment/README.md),
 #              DATA_ROOT (directory that contains te-oa-full/), THREADS (default 10).
 #
-# `compute` reruns the CPU analyses 05 to 08 on the archived counts. It is NOT part of the first
-# migration check: the commands are copied from the run records of 1 to 2 October 2026 and were not
-# re-executed when this repository was made. Step 05 took about 5 minutes (primary) to 20 minutes
+# `compute` reruns the CPU analyses 05 to 08 on the archived counts. The commands are copied from the run
+# records of 1 to 2 October 2026. They were first executed on 28 October 2026; three fixes followed (05b QC
+# table, 05c paired inputs, 08e input of 08f). See docs/runs/2026-10-28_cpu_rerun/RERUN_REPORT.md. Step 05 took about 5 minutes (primary) to 20 minutes
 # (axis removed) on 20 cores; the random-regulator runs took about 12 minutes each on 10 threads.
 # The zebrafish alignment and DESeq2 steps (pipelines/zebrafish_validation/) are not rerun here: their
 # outputs are the manifested inputs counts/, te_de/ and qc/. No GPU is used anywhere.
@@ -48,12 +48,15 @@ stage_compute() {
     "$PY" scripts/05_bulk_linear_isp.py --config "runs/fish_random${s}_rmTEpc1.yaml" --random-regulators "$s"
   done
   # 05b: the global TE-load axis; 05c: real regulators against random pseudo-regulators
-  "$PY" scripts/05b_te_axis_diagnostics.py --config runs/fish_bulk_isp_20261001.yaml --qc runs/qc.tsv
+  "$PY" scripts/05b_te_axis_diagnostics.py --config runs/fish_bulk_isp_20261001.yaml --qc runs/qc_align.tsv
   R=runs/fish_bulk_isp_20261001/tables; Rr=runs/fish_bulk_isp_20261001_rmTEpc1/tables
   "$PY" scripts/05c_compare_random_controls.py --real "$R/05_bulk_isp_effects.tsv" \
-      --random runs/fish_random{1,2,3}/tables/05_random{1,2,3}_bulk_isp_effects.tsv --out runs/05c --label plain
+      --random runs/fish_random1/tables/05_random1_bulk_isp_effects.tsv runs/fish_random2/tables/05_random2_bulk_isp_effects.tsv \
+               runs/fish_random3/tables/05_random3_bulk_isp_effects.tsv --out runs/05c --label plain
   "$PY" scripts/05c_compare_random_controls.py --real "$Rr/05_rmTEpc1_bulk_isp_effects.tsv" \
-      --random runs/fish_random{1,2,3}_rmTEpc1/tables/05_random{1,2,3}_rmTEpc1_bulk_isp_effects.tsv --out runs/05c --label rmTEpc1
+      --random runs/fish_random1_rmTEpc1/tables/05_random1_rmTEpc1_bulk_isp_effects.tsv \
+               runs/fish_random2_rmTEpc1/tables/05_random2_rmTEpc1_bulk_isp_effects.tsv \
+               runs/fish_random3_rmTEpc1/tables/05_random3_rmTEpc1_bulk_isp_effects.tsv --out runs/05c --label rmTEpc1
   # 06 and 07: does CO2 shift the TE axis, and which genes account for it
   "$PY" scripts/06_te_axis_treatment.py --config runs/fish_te_axis_treatment_20261001.yaml \
       --qc runs/qc_align.tsv --de runs/oa_significant_te_results.tsv
@@ -70,6 +73,8 @@ stage_compute() {
   "$PY" scripts/08c_qc_by_arm.py "$N/qc" "$N/samples_all.tsv" "$T"
   "$PY" scripts/08d_te_share_contributors.py "$N/counts" "$N/samples_all.tsv" ZF_hUHRF1_OE_liver_2023 \
       "$T/08d_hUHRF1_OE_te_share_contributors.tsv" "$N/qc"
+  # 08f reads 08e_clutch_deviation.tsv, which needs the DESeq2 working folders (not rerun here): use the committed table
+  [ -f "$T/08e_clutch_deviation.tsv" ] || cp docs/runs/2026-10-01_zebrafish_validation/tables/08e_clutch_deviation.tsv "$T/"
   "$PY" scripts/08f_exploratory_concordance.py "$T"
   echo "compute done; new tables are under runs/ (compare with docs/runs/*/tables using diff or the 05c/08 tables)"
   echo "08b and 08e need the DESeq2 working folders (mapcov, r1only, noblock): see pipelines/zebrafish_validation/"
