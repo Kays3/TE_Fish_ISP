@@ -20,8 +20,19 @@ The figures stage (`run_all.sh figures`, on the same machine and environment) ga
 | Code | this repository at `1d882fb` (main), clean checkout |
 | Machine | Linux x86_64 CPU server, 32 cores, `Linux-7.0.0-38-generic-x86_64-with-glibc2.39`; `THREADS=10`; no GPU |
 | Python | 3.11.15, `environment/python-bulk.lock.txt` installed exactly (`uv pip freeze` equals the lock) |
-| Inputs | the 568 files of `manifests/inputs.sha256.tsv` (538,394,492 bytes). They are no longer at their recorded NAS paths: they moved to an archive on 5 October 2026 (`MOVED_TO.txt` in the old folder). We copied them from the archive into a staging folder and set `DATA_ROOT` to it. 568 of 568 match the manifest sha256. |
+| Inputs | the 568 files of `manifests/inputs.sha256.tsv` (538,394,492 bytes). They are no longer at their recorded NAS paths: they moved to an archive on 5 October 2026 (`MOVED_TO.txt` in the old folder). We copied them from the archive into the staging folder NAS `/mnt/nas/kaisar/fish-isp-rerun-20261028` (568 files, 538,394,492 bytes) and set `DATA_ROOT` to it. 568 of 568 match `manifests/inputs.sha256.tsv` (sha256 of that manifest file: `0fbf9a0d409683def5d2a8422b7c9a7855eaf4afeefc5224153f303b16c07537`). |
 | Run times | 05 and 05b: 1 h 18 min 51 s, peak RSS 3.2 GB. 05c to 08d: 1 min 55 s, peak RSS 1.0 GB. 05b again with the QC fix: 30 s. 08f: 1 s. |
+
+## How to repeat it
+
+```bash
+uv venv --python 3.11 .venv-bulk
+uv pip install --python .venv-bulk/bin/python -r environment/python-bulk.lock.txt
+DATA_ROOT=/mnt/nas/kaisar/fish-isp-rerun-20261028 scripts/verify_inputs.sh      # large inputs: all 568 OK
+PYTHON=.venv-bulk/bin/python DATA_ROOT=/mnt/nas/kaisar/fish-isp-rerun-20261028 THREADS=10 scripts/run_all.sh compute
+```
+
+The staging folder stays until this change is merged; its removal after that is not yet decided.
 
 ## What ran
 
